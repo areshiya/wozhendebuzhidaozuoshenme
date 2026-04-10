@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Governance Toolkit - Urban Digital Twins for Collaborative Smart City Governance</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2/dist/echarts-gl.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      color: white;
+      padding: 30px 20px;
+      margin-bottom: 30px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    .header h1 { font-size: 2.5em; margin-bottom: 15px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); }
+    .header p { font-size: 1.2em; opacity: 0.95; max-width: 900px; margin: 0 auto; line-height: 1.6; }
+    .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+    .nav-tab {
+      padding: 15px 30px;
+      background: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #333;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .nav-tab:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
+    .nav-tab.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .figure-container {
+      display: none;
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 0.5s ease;
+    }
+    .figure-container.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .figure-container h2 { color: #333; font-size: 1.6em; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 3px solid #667eea; }
+    .charts-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); }
+    .chart-panel { background: #f8f9fa; border-radius: 10px; padding: 20px; min-height: 400px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); }
+    .footer { text-align: center; color: white; padding: 30px 20px; margin-top: 30px; opacity: 0.9; }
+    @media (max-width: 768px) {
+      .header h1 { font-size: 1.8em; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .nav-tab { padding: 12px 20px; font-size: 1em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🌐 Global Governance Toolkit</h1>
+    <p>Urban Digital Twins for Collaborative Smart City Governance - Context Calibration & Algorithmic Equity</p>
+    <p style="margin-top: 10px; font-size: 0.95em; opacity: 0.85;">Based on PRISMA Guidelines | 10 Global Representative Cities | Aligned with UN SDG 11.3</p>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showFigure('fig2')">Fig. 2: Multi-dimensional Empirical Diagnostics</button>
+    <button class="nav-tab" onclick="showFigure('fig4')">Fig. 4: Governance Diversity Atlas</button>
+    <button class="nav-tab" onclick="showFigure('fig5')">Fig. 5: Lifecycle Roadmap</button>
+  </div>
+
+  <div id="fig2" class="figure-container active"></div>
+  <div id="fig4" class="figure-container"></div>
+  <div id="fig5" class="figure-container"></div>
+
+  <div class="footer">
+    <p>Reference: Urban Digital Twins for Collaborative Smart City Governance | Nature Cities</p>
+    <p>This toolkit reproduces Fig.2, Fig.4, and Fig.5 from the paper with executable visualizations</p>
+  </div>
+
+  <script>
+    // City data
+    const cityData = {
+      xiongAn: { name: 'Xiong\'an New Area', nameEn: 'Xiong\'an', paradigm: 'Gov-Led', type: 'Tabula Rasa City', scores: { governmentControl: 4.75, deploymentSpeed: 4.80, techAgility: 4.20, marketOpenness: 2.50, dataTransparency: 2.25, publicParticipation: 2.00 }, sensorDesertIndex: 0.35, powerConcentration: 4.5 },
+      singapore: { name: 'Singapore', nameEn: 'Singapore', paradigm: 'Gov-Led', type: 'Global Hub', scores: { governmentControl: 4.75, deploymentSpeed: 4.75, techAgility: 4.50, marketOpenness: 3.25, dataTransparency: 3.00, publicParticipation: 2.75 }, sensorDesertIndex: 0.25, powerConcentration: 4.3 },
+      theLine: { name: 'THE LINE', nameEn: 'THE LINE', paradigm: 'Gov-Led', type: 'Tabula Rasa City', scores: { governmentControl: 4.50, deploymentSpeed: 3.80, techAgility: 4.60, marketOpenness: 2.80, dataTransparency: 2.50, publicParticipation: 1.80 }, sensorDesertIndex: 0.40, powerConcentration: 4.6 },
+      barcelona: { name: 'Barcelona', nameEn: 'Barcelona', paradigm: 'PPP', type: 'Historic City', scores: { governmentControl: 3.00, deploymentSpeed: 3.20, techAgility: 3.80, marketOpenness: 4.20, dataTransparency: 4.50, publicParticipation: 4.30 }, sensorDesertIndex: 0.18, powerConcentration: 2.8 },
+      amsterdam: { name: 'Amsterdam', nameEn: 'Amsterdam', paradigm: 'PPP', type: 'Historic City', scores: { governmentControl: 2.80, deploymentSpeed: 3.50, techAgility: 4.00, marketOpenness: 4.50, dataTransparency: 4.60, publicParticipation: 4.40 }, sensorDesertIndex: 0.15, powerConcentration: 2.5 },
+      rotterdam: { name: 'Rotterdam', nameEn: 'Rotterdam', paradigm: 'PPP', type: 'Port City', scores: { governmentControl: 3.20, deploymentSpeed: 3.40, techAgility: 3.90, marketOpenness: 4.10, dataTransparency: 4.20, publicParticipation: 4.00 }, sensorDesertIndex: 0.20, powerConcentration: 2.9 },
+      minnStPaul: { name: 'Minneapolis-St Paul', nameEn: 'Minn-St Paul', paradigm: 'PPP', type: 'Twin Cities', scores: { governmentControl: 2.90, deploymentSpeed: 3.10, techAgility: 3.70, marketOpenness: 4.00, dataTransparency: 4.10, publicParticipation: 4.20 }, sensorDesertIndex: 0.22, powerConcentration: 2.7 },
+      newYork: { name: 'New York', nameEn: 'New York', paradigm: 'Market', type: 'Global Hub', scores: { governmentControl: 3.50, deploymentSpeed: 3.80, techAgility: 4.30, marketOpenness: 4.60, dataTransparency: 3.50, publicParticipation: 3.20 }, sensorDesertIndex: 0.28, powerConcentration: 3.2 },
+      toronto: { name: 'Toronto', nameEn: 'Toronto', paradigm: 'Market', type: 'Financial Center', scores: { governmentControl: 3.20, deploymentSpeed: 3.60, techAgility: 4.10, marketOpenness: 4.40, dataTransparency: 3.80, publicParticipation: 3.50 }, sensorDesertIndex: 0.20, powerConcentration: 3.0 },
+      seoul: { name: 'Seoul', nameEn: 'Seoul', paradigm: 'Market', type: 'Global Hub', scores: { governmentControl: 3.80, deploymentSpeed: 4.00, techAgility: 4.40, marketOpenness: 4.20, dataTransparency: 3.40, publicParticipation: 3.10 }, sensorDesertIndex: 0.24, powerConcentration: 3.4 }
+    };
+
+    const paradigms = {
+      'Gov-Led': { label: 'Government-Led', color: '#e74c3c', cities: ['xiongAn', 'singapore', 'theLine'] },
+      'PPP': { label: 'PPP', color: '#3498db', cities: ['barcelona', 'amsterdam', 'rotterdam', 'minnStPaul'] },
+      'Market': { label: 'Market-Driven', color: '#2ecc71', cities: ['newYork', 'toronto', 'seoul'] }
+    };
+
+    function getParadigmColor(paradigm) {
+      return paradigms[paradigm].color;
+    }
+
+    // Calculate mean
+    function calculateGlobalMean() {
+      const cities = Object.values(cityData);
+      const indicators = ['governmentControl', 'deploymentSpeed', 'techAgility', 'marketOpenness', 'dataTransparency', 'publicParticipation'];
+      const mean = {};
+      indicators.forEach(ind => {
+        mean[ind] = cities.reduce((sum, city) => sum + city.scores[ind], 0) / cities.length;
+      });
+      return mean;
+    }
+
+    // Tab switching
+    function showFigure(figName) {
+      document.querySelectorAll('.figure-container').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+      document.getElementById(figName).classList.add('active');
+      event.target.classList.add('active');
+      window.dispatchEvent(new Event('resize'));
+    }
+
+    // Initialize charts
+    function initCharts() {
+      renderFig2();
+      renderFig4();
+      renderFig5();
+    }
+
+    function renderFig2() {
+      const container = document.getElementById('fig2');
+      container.innerHTML = `
+        <h2>Fig. 2 | Multi-dimensional Empirical Diagnostics: Power Structure & Spatial Justice Assessment for 10 Global Cities</h2>
+        <div class="charts-grid">
+          <div id="panel-2a" class="chart-panel"></div>
+          <div id="panel-2b" class="chart-panel"></div>
+          <div id="panel-2c" class="chart-panel"></div>
+          <div id="panel-2d" class="chart-panel"></div>
+          <div id="panel-2e" class="chart-panel"></div>
+          <div id="panel-2f" class="chart-panel"></div>
+          <div id="panel-2g" class="chart-panel"></div>
+        </div>
+      `;
+
+      // 2a: 3D Scatter
+      const chart2a = echarts.init(document.getElementById('panel-2a'));
+      const cities3d = Object.entries(cityData).map(([key, data]) => ({
+        name: data.nameEn, paradigm: data.paradigm,
+        value: [data.scores.governmentControl, data.scores.publicParticipation, data.scores.dataTransparency]
+      }));
+      chart2a.setOption({
+        title: { text: '(a) Power–Actors–Process 3D Diagnostic Framework', left: 'center', textStyle: { fontSize: 14, fontWeight: 'bold' } },
+        tooltip: {},
+        legend: { data: ['Government-Led', 'PPP', 'Market-Driven'], bottom: 10 },
+        grid3D: { boxWidth: 100, boxDepth: 100, viewControl: { alpha: 20, beta: 40 } },
+        xAxis3D: { name: 'Power Concentration', min: 1, max: 5 },
+        yAxis3D: { name: 'Multi-actor Participation', min: 1, max: 5 },
+        zAxis3D: { name: 'Process Transparency', min: 1, max: 5 },
+        series: [{
+          type: 'scatter3D',
+          data: cities3d.map(c => ({
+            value: c.value, name: c.name,
+            itemStyle: { color: getParadigmColor(c.paradigm) }
+          })),
+          symbolSize: 12,
+          label: { show: true, formatter: '{b}', position: 'top', textStyle: { fontSize: 10 } }
+        }]
+      });
+
+      // 2b: Power Concentration Line Chart
+      const chart2b = echarts.init(document.getElementById('panel-2b'));
+      const sortedCities = Object.entries(cityData).sort((a, b) => b[1].powerConcentration - a[1].powerConcentration);
+      chart2b.setOption({
+        title: { text: '(b) City Power Concentration Ranking', left: 'center', textStyle: { fontSize: 14, fontWeight: 'bold' } },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: sortedCities.map(c => c[1].nameEn), axisLabel: { rotate: 45, fontSize: 10 } },
+        yAxis: { type: 'value', min: 1, max: 5, name: 'Power Concentration' },
+        series: [{
+          type: 'line',
+          data: sortedCities.map(c => ({ value: c[1].powerConcentration, itemStyle: { color: getParadigmColor(c[1].paradigm) } })),
+          smooth: true, symbolSize: 8, lineStyle: { width: 3 }
+        }]
+      });
+
+      // 2c: Governance Stage Power Dynamics
+      const chart2c = echarts.init(document.getElementById('panel-2c'));
+      const stages = ['Data Sensing', 'Data Aggregation', 'Algorithmic Analysis', 'Decision Execution', 'Feedback Audit'];
+      const powerData = {
+        'xiongAn': [4.8, 4.5, 4.2, 4.6, 2.0], 'singapore': [4.5, 4.3, 4.0, 4.2, 2.5],
+        'barcelona': [3.2, 3.0, 2.8, 3.0, 4.2], 'amsterdam': [3.0, 2.8, 2.5, 2.8, 4.4],
+        'newYork': [3.5, 3.8, 3.6, 3.4, 3.2]
+      };
+      chart2c.setOption({
+        title: { text: '(c) Power Dynamics Across Governance Stages', left: 'center', textStyle: { fontSize: 14, fontWeight: 'bold' } },
+        tooltip: { trigger: 'axis' },
+        legend: { data: ['Xiong\'an', 'Singapore', 'Barcelona', 'Amsterdam', 'New York'], bottom: 10 },
+        xAxis: { type: 'category', data: stages },
+        yAxis: { type: 'value', min: 1, max: 5, name: 'Power Density' },
+        series: ['xiongAn', 'singapore', 'barcelona', 'amsterdam', 'newYork'].map((key, i) => ({
+          name: cityData[key].name, type: 'line', data: powerData[key],
+          smooth: true, symbolSize: 6, lineStyle: { width: 2 },
+          itemStyle: { color: getParadigmColor(cityData[key].paradigm) }
+        }))
+      });
+
+      // 2d: Power Distribution Heatmap
+      const chart2d = echarts.init(document.getElementById('panel-2d'));
+      const neighborhoods = ['High-Income', 'Middle-Class', 'Working-Class', 'Ethnic Minority', 'Marginalized'];
+      const services = ['Air Quality', 'Heat Island', 'Traffic Flow', 'Noise', 'Green Coverage'];
+      const heatmapData = [];
+      for (let i = 0; i < neighborhoods.length; i++) {
+        for (let j = 0; j < services.length; j++) {
+          heatmapData.push([j, i, Math.max(1, Math.min(5, 5 - (i * 0.8) - (j * 0.3) + (Math.random() * 0.5 - 0.25)))]);
+        }
+      }
+      chart2d.setOption({
+        title: { text: '(d) Power Distribution Matrix: Public Service Distributive Justice', left: 'center', textStyle: { fontSize: 14, fontWeight: 'bold' } },
+        tooltip: { position: 'top', formatter: p => `${neighborhoods[p.value[1]]}<br/>${services[p.value[0]]}<br/>Sensing Density: ${p.value[2].toFixed(2)}` },
+        grid: { left: 120, right: 50, top: 50, bottom: 80 },
+        xAxis: { type: 'category', data: services, axisLabel: { rotate: 0,interval: 0, fontSize: 10 } },
+        yAxis: { type: 'category', data: neighborhoods },
+        visualMap: { min: 1, max: 5, calculable: true, orient: 'horizontal', left: 'center', bottom: 10, inRange: { color: ['#e74c3c', '#f39c12', '#f1c40f', '#2ecc71', '#3498db'] } },
+        series: [{ type: 'heatmap', data: heatmapData, label: { show: true, fontSize: 9,formatter: function (p) {
+            return p.value[2].toFixed(3); 
+        } } }]
+      });
+
+      // 2e: Sensor Desert Index
+      const chart2e = echarts.init(document.getElementById('panel-2e'));
+      const sortedByDesert = Object.entries(cityData).sort((a, b) => b[1].sensorDesertIndex - a[1].sensorDesertIndex);
+      chart2e.setOption({
+        title: { text: '(e) "Sensor Desert" Index Diagnosis', left: 'center', textStyle: { fontSize: 14, fontWeight: 'bold' } },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: sortedByDesert.map(c => c[1].nameEn), axisLabel: { rotate: 45, fontSize: 10 } },
+        yAxis: { type: 'value', min: 0, max: 0.5, name: 'Sensor Desert Index' },
+        series: [{
+          type: 'bar',
+          data: sortedByDesert.map(c => ({
+            value: c[1].sensorDesertIndex,
+            itemStyle: { color: c[1].sensorDesertIndex > 0.3 ? '#e74c3c' : c[1].sensorDesertIndex > 0.2 ? '#f39c12' : '#2ecc71' }
+          })),
+          label: { show: true, position: 'top', formatter: '{c}', fontSize: 10 }
+        }]
+      });
+
+      // 2f: Governance Maturity Radar
+      const chart2f = echarts.init(document.getElementById('panel-2f'));
+      chart2f.setOption({
+        title: { text: '(f) Governance Maturity Radar: Current vs. Ideal', left: 'center', textStyle: { fontSize: 14, fontWeight: 'bold' } },
+        tooltip: {},
+        legend: { data: ['Current Mode', 'Ideal Governance-Driven Mode'], bottom: 10 },
+        radar: { indicator: [{ name: 'Gov. Control', max: 5 }, { name: 'Deployment', max: 5 }, { name: 'Tech Agility', max: 5 }, { name: 'Market Open.', max: 5 }, { name: 'Data Transp.', max: 5 }, { name: 'Public Partic.', max: 5 }, { name: 'Infra Equity', max: 5 }], radius: '60%' },
+        series: [{
+          type: 'radar',
+          data: [
+            { value: [3.65, 3.80, 4.05, 3.76, 3.43, 3.33, 2.80], name: 'Current Mode', areaStyle: { color: 'rgba(231, 76, 60, 0.3)' }, lineStyle: { color: '#e74c3c' }, itemStyle: { color: '#e74c3c' } },
+            { value: [3.50, 4.00, 4.20, 4.20, 4.30, 4.20, 4.50], name: 'Ideal Governance-Driven Mode', areaStyle: { color: 'rgba(52, 152, 219, 0.3)' }, lineStyle: { color: '#3498db' }, itemStyle: { color: '#3498db' } }
+          ]
+        }]
+      });
+
+      // 2g: Network Topology
+      const chart2g = echarts.init(document.getElementById('panel-2g'));
+      chart2g.setOption({
+        title: { text: '(g) Stakeholder Network Topology: Tech-Driven vs. Governance-Driven', left: 'center', textStyle: { fontSize: 14, fontWeight: 'bold' } },
+        tooltip: {},
+        legend: { data: ['Tech-Driven Mode', 'Governance-Driven Mode'], bottom: 10 },
+        series: [
+          {
+            name: 'Tech-Driven Mode', type: 'graph', layout: 'force',
+            data: [{ name: 'Tech Vendors', symbolSize: 50 }, { name: 'Government', symbolSize: 40 }, { name: 'Business', symbolSize: 30 }, { name: 'Public', symbolSize: 20 }, { name: 'Academia', symbolSize: 25 }],
+            links: [{ source: 'Tech Vendors', target: 'Government', value: 5 }, { source: 'Tech Vendors', target: 'Business', value: 4 }, { source: 'Government', target: 'Public', value: 2 }, { source: 'Business', target: 'Public', value: 1 }],
+            force: { repulsion: 200, edgeLength: 100 }, roam: true, label: { show: true, fontSize: 10 },
+            left: '0%', top: '15%',bottom:'15%', width: '50%', height: '80%'
+          },
+          {
+            name: 'Governance-Driven Mode', type: 'graph', layout: 'force',
+            data: [{ name: 'Government', symbolSize: 40 }, { name: 'Business', symbolSize: 35 }, { name: 'Public', symbolSize: 40 }, { name: 'Academia', symbolSize: 35 }, { name: 'NGO', symbolSize: 30 }],
+            links: [{ source: 'Government', target: 'Business', value: 3 }, { source: 'Government', target: 'Public', value: 4 }, { source: 'Business', target: 'Public', value: 3 }, { source: 'Academia', target: 'Government', value: 4 }, { source: 'NGO', target: 'Public', value: 5 }],
+            force: { repulsion: 200, edgeLength: 100 }, roam: true, label: { show: true, fontSize: 10 },
+            left: '50%', top: '15%',bottom:'15%', width: '50%', height: '80%'
+          }
+        ]
+      });
+
+      window.addEventListener('resize', () => {
+        chart2a.resize(); chart2b.resize(); chart2c.resize();
+        chart2d.resize(); chart2e.resize(); chart2f.resize(); chart2g.resize();
+      });
+    }
+
+    function renderFig4() {
+      const container = document.getElementById('fig4');
+      container.innerHTML = `
+        <h2>Fig. 4 | Governance Diversity Atlas & Paradigm Characteristics of Global Cities</h2>
+        <div class="charts-grid">
+          <div id="panel-4a" class="chart-panel"></div>
+        </div>
+        <div id="rose-charts-container" style="margin-top: 20px;"></div>
+      `;
+
+      // 4a: Deviation Bar Chart
+      const chart4a = echarts.init(document.getElementById('panel-4a'));
+      const mean = calculateGlobalMean();
+      const indicators = { governmentControl: 'Gov. Control', deploymentSpeed: 'Deployment', techAgility: 'Tech Agility', marketOpenness: 'Market Open.', dataTransparency: 'Data Transp.', publicParticipation: 'Public Partic.' };
+      const indicatorKeys = Object.keys(indicators);
+
+      const paradigmDeviation = {};
+      Object.keys(paradigms).forEach(pKey => {
+        paradigmDeviation[pKey] = {};
+        indicatorKeys.forEach(key => {
+          const cities = paradigms[pKey].cities;
+          paradigmDeviation[pKey][key] = cities.reduce((sum, cityKey) => sum + (cityData[cityKey].scores[key] - mean[key]), 0) / cities.length;
+        });
+      });
+
+      chart4a.setOption({
+        title: { text: '(a) Governance Paradigm Fingerprints: Administrative Efficiency vs. Social Inclusion', left: 'center', textStyle: { fontSize: 14, fontWeight: 'bold' } },
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: p => { let r = p[0].name + '<br/>'; p.forEach(i => { r += `${i.seriesName}: ${i.value > 0 ? '+' : ''}${i.value.toFixed(2)}<br/>`; }); return r; } },
+        legend: { data: ['Government-Led', 'PPP', 'Market-Driven'], bottom: 10 },
+        grid: { left: 100, right: 50, top: 60, bottom: 60 },
+        xAxis: { type: 'value', name: 'Deviation (vs. Global Mean)', axisLine: { lineStyle: { color: '#333' } }, splitLine: { lineStyle: { type: 'dashed' } } },
+        yAxis: { type: 'category', data: indicatorKeys.map(k => indicators[k]) },
+        series: [
+          { name: 'Government-Led', type: 'bar', data: indicatorKeys.map(key => paradigmDeviation['Gov-Led'][key]), itemStyle: { color: '#e74c3c' }, label: { show: true, position: 'right', formatter: p => (p.value > 0 ? '+' : '') + p.value.toFixed(2), fontSize: 9 } },
+          { name: 'PPP', type: 'bar', data: indicatorKeys.map(key => paradigmDeviation['PPP'][key]), itemStyle: { color: '#3498db' }, label: { show: true, position: 'right', formatter: p => (p.value > 0 ? '+' : '') + p.value.toFixed(2), fontSize: 9 } },
+          { name: 'Market-Driven', type: 'bar', data: indicatorKeys.map(key => paradigmDeviation['Market'][key]), itemStyle: { color: '#2ecc71' }, label: { show: true, position: 'right', formatter: p => (p.value > 0 ? '+' : '') + p.value.toFixed(2), fontSize: 9 } }
+        ]
+      });
+
+      // 4b-k: Nightingale Rose Charts
+      const roseContainer = document.getElementById('rose-charts-container');
+      const grid = document.createElement('div');
+      grid.style.display = 'grid';
+      grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+      grid.style.gap = '15px';
+      roseContainer.appendChild(grid);
+
+      Object.entries(cityData).forEach(([cityKey, city], index) => {
+        const chartDiv = document.createElement('div');
+        chartDiv.style.width = '100%';
+        chartDiv.style.height = '300px';
+        chartDiv.style.background = '#f8f9fa';
+        chartDiv.style.borderRadius = '10px';
+        chartDiv.style.padding = '10px';
+        grid.appendChild(chartDiv);
+
+        const chart = echarts.init(chartDiv);
+        const paradigmColor = getParadigmColor(city.paradigm);
+        const letter = String.fromCharCode(98 + index);
+
+        chart.setOption({
+          title: {
+            text: `(${letter.toUpperCase()}) ${city.name} (${city.type})`,
+            subtext: `${paradigms[city.paradigm].label} Paradigm`,
+            left: 'center',
+            textStyle: { fontSize: 12, fontWeight: 'bold', color: paradigmColor },
+            subtextStyle: { fontSize: 9 }
+          },
+          tooltip: { trigger: 'item', formatter: '{b}: {c}' },
+          polar: { radius: ['15%', '75%'], center: ['50%', '55%'] },
+          angleAxis: {
+            type: 'category',
+            data: Object.values(indicators),
+            startAngle: 75,
+            axisLabel: { fontSize: 9, interval: 0, rotate: 30 }
+          },
+          radiusAxis: { min: 0, max: 5, axisLabel: { fontSize: 9 } },
+          series: [{
+            type: 'bar',
+            data: indicatorKeys.map(key => ({
+              value: city.scores[key],
+              itemStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  { offset: 0, color: paradigmColor },
+                  { offset: 1, color: paradigmColor + '60' }
+                ])
+              }
+            })),
+            coordinateSystem: 'polar',
+            barMaxWidth: 30,
+            label: { show: true, position: 'top', formatter: '{c}', fontSize: 10, fontWeight: 'bold' },
+            itemStyle: { borderRadius: 3 }
+          }]
+        });
+
+        window.addEventListener('resize', () => chart.resize());
+      });
+
+      window.addEventListener('resize', () => chart4a.resize());
+    }
+
+    function renderFig5() {
+      const container = document.getElementById('fig5');
+      container.innerHTML = `
+        <h2>Fig. 5 | Lifecycle Roadmap for Responsible Urban Digital Twin Governance</h2>
+        <div class="charts-grid">
+          <div id="panel-5a" class="chart-panel"></div>
+          <div id="panel-5b" class="chart-panel"></div>
+          <div id="panel-5c" class="chart-panel"></div>
+          <div id="panel-5d" class="chart-panel"></div>
+          <div id="panel-5e" class="chart-panel"></div>
+        </div>
+      `;
+
+      // 5a: Design Stage Sankey
+      const chart5a = echarts.init(document.getElementById('panel-5a'));
+      chart5a.setOption({
+        title: { text: '(a) Design Stage: Ethics by Design', left: 'center', textStyle: { fontSize: 14, fontWeight: 'bold' } },
+        tooltip: {},
+        series: [{
+          type: 'sankey', layout: 'none', emphasis: { focus: 'adjacency' },
+          data: [
+            { name: 'City Function', itemStyle: { color: '#3498db' } },
+            { name: 'Port City', itemStyle: { color: '#2ecc71' } },
+            { name: 'Financial Center', itemStyle: { color: '#e74c3c' } },
+            { name: 'Historic City', itemStyle: { color: '#f39c12' } },
+            { name: 'Tabula Rasa', itemStyle: { color: '#9b59b6' } },
+            { name: 'Equity Constraints', itemStyle: { color: '#1abc9c' } },
+            { name: 'Data Sovereignty', itemStyle: { color: '#e67e22' } },
+            { name: 'Heritage Protection', itemStyle: { color: '#34495e' } },
+            { name: 'Sensor Desert Prevention', itemStyle: { color: '#16a085' } }
+          ],
+          links: [
+            { source: 'City Function', target: 'Port City', value: 3 },
+            { source: 'City Function', target: 'Financial Center', value: 3 },
+            { source: 'City Function', target: 'Historic City', value: 3 },
+            { source: 'City Function', target: 'Tabula Rasa', value: 3 },
+            { source: 'Port City', target: 'Equity Constraints', value: 2 },
+            { source: 'Financial Center', target: 'Data Sovereignty', value: 3 },
+            { source: 'Historic City', target: 'Heritage Protection', value: 3 },
+            { source: 'Tabula Rasa', target: 'Sensor Desert Prevention', value: 3 }
+          ],
+          lineStyle: { curveness: 0.5, opacity: 0.6 },
+          label: { fontSize: 10 }
+        }]
+      });
+
+      // 5b: Deployment Stage Radar
+      const chart5b = echarts.init(document.getElementById('panel-5b'));
+      const stages = ['Requirements', 'System Design', 'Sandbox Testing', 'Interop. Validation', 'Privacy Assessment', 'Deployment'];
+      const deployData = {
+        'Government-Led': [4.5, 4.2, 3.8, 3.5, 3.2, 4.0],
+        'PPP': [3.5, 3.8, 4.2, 4.5, 4.3, 3.8],
+        'Market-Driven': [3.8, 4.0, 3.9, 3.7, 3.5, 4.2]
+      };
+      chart5b.setOption({
+        title: { text: '(b) Deployment Stage: Regulatory Sandbox & Interoperability Testing', left: 'center', textStyle: { fontSize: 14, fontWeight: 'bold' } },
+        tooltip: { trigger: 'axis' },
+        legend: { data: ['Government-Led', 'PPP', 'Market-Driven'], bottom: 10 },
+        radar: { indicator: stages.map(s => ({ name: s, max: 5 })), radius: '65%' },
+        series: [{
+          type: 'radar',
+          data: [
+            { value: deployData['Government-Led'], name: 'Government-Led', areaStyle: { color: 'rgba(231, 76, 60, 0.2)' }, lineStyle: { color: '#e74c3c' }, itemStyle: { color: '#e74c3c' } },
+            { value: deployData['PPP'], name: 'PPP', areaStyle: { color: 'rgba(52, 152, 219, 0.2)' }, lineStyle: { color: '#3498db' }, itemStyle: { color: '#3498db' } },
+            { value: deployData['Market-Driven'], name: 'Market-Driven', areaStyle: { color: 'rgba(46, 204, 113, 0.2)' }, lineStyle: { color: '#2ecc71' }, itemStyle: { color: '#2ecc71' } }
+          ]
+        }]
+      });
+
+      // 5c: Operation Stage Dashboard
+      const chart5c = echarts.init(document.getElementById('panel-5c'));
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      chart5c.setOption({
+        title: { text: '(c) Operation Stage: Public Real-Time Audit Dashboard', left: 'center', textStyle: { fontSize: 14, fontWeight: 'bold' } },
+        tooltip: { trigger: 'axis' },
+        legend: { data: ['Public Participation', 'Algorithmic Transparency', 'Data Openness', 'Equity Index'], bottom: 10 },
+        grid: { left: 60, right: 40, top: 60, bottom: 60 },
+        xAxis: { type: 'category', data: months },
+        yAxis: { type: 'value', min: 0, max: 100, name: 'Percentage (%)' },
+        series: [
+          { name: 'Public Participation', type: 'line', data: [45, 48, 52, 58, 62, 68, 72, 75, 78, 82, 85, 88], smooth: true, areaStyle: { opacity: 0.1 }, lineStyle: { width: 3 }, itemStyle: { color: '#3498db' } },
+          { name: 'Algorithmic Transparency', type: 'line', data: [50, 53, 56, 60, 64, 67, 70, 73, 76, 78, 80, 83], smooth: true, areaStyle: { opacity: 0.1 }, lineStyle: { width: 3 }, itemStyle: { color: '#2ecc71' } },
+          { name: 'Data Openness', type: 'line', data: [55, 58, 62, 66, 70, 74, 77, 80, 82, 85, 87, 90], smooth: true, areaStyle: { opacity: 0.1 }, lineStyle: { width: 3 }, itemStyle: { color: '#f39c12' } },
+          { name: 'Equity Index', type: 'line', data: [40, 43, 47, 52, 56, 60, 65, 68, 72, 75, 78, 82], smooth: true, areaStyle: { opacity: 0.1 }, lineStyle: { width: 3 }, itemStyle: { color: '#e74c3c' } }
+        ]
+      });
+
+      // 5d: Algorithmic Authority Pipeline
+      const chart5d = echarts.init(document.getElementById('panel-5d'));
+      chart5d.setOption({
+        title: { text: '(d) G-tech Core & Algorithmic Authority Production Pipeline', subtext: 'Revealing Implicit Power Shift from Administrative to Algorithmic Decision-Making', left: 'center', textStyle: { fontSize: 14, fontWeight: 'bold' }, subtextStyle: { fontSize: 10 } },
+        tooltip: {},
+        series: [{
+          type: 'sankey', layout: 'none', emphasis: { focus: 'adjacency' },
+          data: [
+            { name: 'Physical City Sensing', itemStyle: { color: '#3498db' } },
+            { name: 'Selective Perception Filter', itemStyle: { color: '#e74c3c' } },
+            { name: 'Data Aggregation', itemStyle: { color: '#2ecc71' } },
+            { name: 'Semantic Annotation', itemStyle: { color: '#f39c12' } },
+            { name: 'Black-Box Simulation', itemStyle: { color: '#9b59b6' } },
+            { name: 'Algorithmic Decision Output', itemStyle: { color: '#e67e22' } },
+            { name: 'Implicit Power Restructuring', itemStyle: { color: '#c0392b' } }
+          ],
+          links: [
+            { source: 'Physical City Sensing', target: 'Selective Perception Filter', value: 5 },
+            { source: 'Selective Perception Filter', target: 'Data Aggregation', value: 4 },
+            { source: 'Data Aggregation', target: 'Semantic Annotation', value: 4 },
+            { source: 'Semantic Annotation', target: 'Black-Box Simulation', value: 4 },
+            { source: 'Black-Box Simulation', target: 'Algorithmic Decision Output', value: 4 },
+            { source: 'Algorithmic Decision Output', target: 'Implicit Power Restructuring', value: 5 }
+          ],
+          lineStyle: { curveness: 0.5, opacity: 0.6, color: 'gradient' },
+          label: { fontSize: 11, fontWeight: 'bold' }
+        }]
+      });
+
+      // 5e: Spatial Justice Translation Matrix
+      const chart5e = echarts.init(document.getElementById('panel-5e'));
+      const sdgPillars = ['Inclusive Urbanization', 'Sustainable Settlements', 'Participatory Governance', 'Marginalized Groups Protection'];
+      const interventionPoints = ['Data Sensing', 'Simulation Modeling', 'Decision Execution', 'Feedback Audit'];
+      const maturityData = [
+        [0, 0, 2], [1, 0, 3], [2, 0, 4], [3, 0, 3],
+        [0, 1, 2], [1, 1, 2], [2, 1, 3], [3, 1, 4],
+        [0, 2, 3], [1, 2, 3], [2, 2, 4], [3, 2, 5],
+        [0, 3, 1], [1, 3, 2], [2, 3, 3], [3, 3, 4]
+      ];
+      chart5e.setOption({
+        title: { text: '(e) Spatial Justice Translation Matrix: SDG 11.3 Strategic Alignment', subtext: 'Calibration Maturity: Orange (High Risk) → Blue (Equity Aligned)', left: 'center', textStyle: { fontSize: 14, fontWeight: 'bold' }, subtextStyle: { fontSize: 9 } },
+        tooltip: {
+          position: 'top',
+          formatter: p => {
+            const actions = { 1: 'Bridge Data Gaps in Marginalized Communities', 2: 'Establish Data Access Standards', 3: 'Implement Algorithmic Audit', 4: 'Ensure Distributive Justice', 5: 'Achieve Full Equity Alignment' };
+            return `${sdgPillars[p.value[1]]} × ${interventionPoints[p.value[0]]}<br/>Maturity: ${p.value[2]}/5<br/>Action: ${actions[p.value[2]]}`;
+          }
+        },
+        grid: { left: 120, right: 80, top: 80, bottom: 80 },
+        xAxis: { type: 'category', data: interventionPoints, axisLabel: { fontSize: 10, rotate: 0, interval: 0,formatter: function (value) {return value.split(' ').join('\n');      }}, name: 'UDT Technical Intervention Points', nameLocation: 'middle', nameGap: 35 },
+        yAxis: { type: 'category', data: sdgPillars, axisLabel: { fontSize: 11 }, name: 'SDG 11.3 Pillars' },
+        visualMap: { min: 1, max: 5, calculable: false, orient: 'horizontal', left: 'center', bottom: 0, text: ['Equity Aligned', 'High Risk'], inRange: { color: ['#e74c3c', '#f39c12', '#f1c40f', '#3498db', '#2980b9'] } },
+        series: [{ type: 'heatmap', data: maturityData, label: { show: true, fontSize: 12, fontWeight: 'bold', formatter: p => p.value[2] + '/5' } }]
+      });
+
+      window.addEventListener('resize', () => {
+        chart5a.resize(); chart5b.resize(); chart5c.resize();
+        chart5d.resize(); chart5e.resize();
+      });
+    }
+
+    // Initialize on load
+    window.addEventListener('load', initCharts);
+  </script>
+</body>
+</html>

@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Governance Toolkit - Urban Digital Twins</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts-gl@2/dist/echarts-gl.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+    .header { text-align: center; color: white; padding: 25px 20px; margin-bottom: 15px; background: rgba(255,255,255,0.1); border-radius: 12px; }
+    .header h1 { font-size: 1.8em; margin-bottom: 8px; }
+    .header p { font-size: 0.95em; opacity: 0.95; }
+    .tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+    .tab { padding: 10px 20px; background: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95em; font-weight: bold; color: #333; box-shadow: 0 3px 5px rgba(0,0,0,0.1); transition: all 0.3s; }
+    .tab:hover { transform: translateY(-2px); }
+    .tab.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+    .page { display: none; background: white; border-radius: 12px; padding: 25px; box-shadow: 0 6px 24px rgba(0,0,0,0.1); animation: fade 0.4s; }
+    .page.active { display: block; }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    h2 { color: #333; font-size: 1.3em; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 3px solid #667eea; }
+    h3 { color: #555; font-size: 1.05em; margin: 12px 0 8px; }
+    #fig2 .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    }
+    #fig4 .panel {
+        height: 500px !important; 
+        margin-bottom: 30px;
+        width: 100%;
+        display: block; /* 确保它是块级显示 */
+    }
+    #fig4 .grid3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+    .panel { 
+        background: #f8f9fa; 
+        border-radius: 8px; 
+        padding: 12px; 
+    }
+    .chart-box-2 { 
+      width: 100% !important;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        height: 420px; /* 既然横向变宽了，高度建议从 320 调到 420，比例更协调 */
+    }
+    .fg { margin-bottom: 10px; }
+    label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 0.9em; }
+    input, select { width: 100%; padding: 7px; border: 2px solid #ddd; border-radius: 5px; font-size: 0.9em; }
+    .btn { padding: 9px 22px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 7px; cursor: pointer; font-size: 0.95em; font-weight: bold; margin: 6px 4px; }
+    .btn:hover { opacity: 0.9; }
+    .result { background: #e8f4f8; border-left: 4px solid #667eea; padding: 12px; margin: 12px 0; border-radius: 5px; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.8em; font-weight: bold; color: white; margin: 2px; }
+    .badge.gov { background: #e74c3c; }
+    .badge.ppp { background: #3498db; }
+    .badge.mkt { background: #2ecc71; }
+    .recs { list-style: none; padding: 0; }
+    .recs li { padding: 6px; margin: 3px 0; background: white; border-radius: 4px; border-left: 3px solid #667eea; font-size: 0.9em; }
+    .slider-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+    .slider-row input[type="range"] { flex: 1; padding: 0; }
+    .slider-val { min-width: 40px; text-align: center; font-weight: bold; color: #667eea; font-size: 0.95em; }
+    .tbl { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 0.9em; }
+    .tbl th, .tbl td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+    .tbl th { background: #667eea; color: white; }
+    .chart-box { 
+        width: 100%; 
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        height: 420px; /* 既然横向变宽了，高度建议从 320 调到 420，比例更协调 */
+    } 
+    .footer { text-align: center; color: white; padding: 15px; margin-top: 12px; opacity: 0.9; font-size: 0.85em; }
+    @media (max-width: 768px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🌐 Global Governance Toolkit</h1>
+    <p>Urban Digital Twins | Context Calibration & Algorithmic Equity</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="show('assessment',this)">📊 Assessment</button>
+    <button class="tab" onclick="show('fig2',this)">Fig. 2</button>
+    <button class="tab" onclick="show('fig4',this)">Fig. 4</button>
+    <button class="tab" onclick="show('compare',this)">🔍 Compare</button>
+  </div>
+
+  <!-- Assessment -->
+  <div id="assessment" class="page active">
+    <h2>City Governance Assessment</h2>
+    <div class="grid2">
+      <div>
+        <h3>Select or Input City</h3>
+        <div class="fg">
+          <label>Quick Select (Fig.4 cities)</label>
+          <select id="preset" onchange="loadPreset()">
+            <option value="">-- Custom City --</option>
+            <option value="xiongAn">Xiong'an (Gov-Led)</option>
+            <option value="singapore">Singapore (Gov-Led)</option>
+            <option value="theLine">THE LINE (Gov-Led)</option>
+            <option value="barcelona">Barcelona (PPP)</option>
+            <option value="amsterdam">Amsterdam (PPP)</option>
+            <option value="rotterdam">Rotterdam (PPP)</option>
+            <option value="minnStPaul">Minneapolis-St Paul (PPP)</option>
+            <option value="newYork">New York (Market)</option>
+            <option value="toronto">Toronto (Market)</option>
+            <option value="seoul">Seoul (Market)</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>City Name</label>
+          <input type="text" id="cname" value="New York">
+        </div>
+        <div class="fg">
+          <label>City Type</label>
+          <select id="ctype">
+            <option>Global Hub</option><option>Historic City</option><option>Port City</option>
+            <option>Financial Center</option><option>Tabula Rasa City</option><option>Twin Cities</option>
+          </select>
+        </div>
+
+        <h3>Governance Scores (1-5)</h3>
+        <div class="fg">
+          <label>Government Control</label>
+          <div class="slider-row"><input type="range" id="gc" min="1" max="5" step="0.25" value="3.5"><span class="slider-val" id="gc-v">3.5</span></div>
+        </div>
+        <div class="fg">
+          <label>Deployment Speed</label>
+          <div class="slider-row"><input type="range" id="ds" min="1" max="5" step="0.25" value="3.5"><span class="slider-val" id="ds-v">3.5</span></div>
+        </div>
+        <div class="fg">
+          <label>Technology Agility</label>
+          <div class="slider-row"><input type="range" id="ta" min="1" max="5" step="0.25" value="3.5"><span class="slider-val" id="ta-v">3.5</span></div>
+        </div>
+        <div class="fg">
+          <label>Market Openness</label>
+          <div class="slider-row"><input type="range" id="mo" min="1" max="5" step="0.25" value="3.5"><span class="slider-val" id="mo-v">3.5</span></div>
+        </div>
+        <div class="fg">
+          <label>Data Transparency</label>
+          <div class="slider-row"><input type="range" id="dt" min="1" max="5" step="0.25" value="3.5"><span class="slider-val" id="dt-v">3.5</span></div>
+        </div>
+        <div class="fg">
+          <label>Public Participation</label>
+          <div class="slider-row"><input type="range" id="pp" min="1" max="5" step="0.25" value="3.5"><span class="slider-val" id="pp-v">3.5</span></div>
+        </div>
+
+        <button class="btn" onclick="assess()">🔍 Assess</button>
+        <button class="btn" onclick="resetForm()" style="background:#95a5a6;">Reset</button>
+      </div>
+
+      <div id="results">
+        <div class="result" style="text-align:center;color:#666;">Adjust scores and click Assess</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fig 2 -->
+  <div id="fig2" class="page">
+    <h2>Fig. 2 | Multi-dimensional Empirical Diagnostics: Power Structure & Spatial Justice Assessment for 10 Global Cities</h2>
+    <div class="grid2">
+      <div><div id="f2a" class="chart-box"></div></div>
+      <div><div id="f2b" class="chart-box"></div></div>
+      <div><div id="f2c" class="chart-box"></div></div>
+      <div><div id="f2d" class="chart-box"></div></div>
+      <div><div id="f2e" class="chart-box"></div></div>
+      <div><div id="f2f" class="chart-box"></div></div>
+      <div><div id="f2g" class="chart-box"></div></div>
+    </div>
+  </div>
+
+  <!-- Fig 4 -->
+  <div id="fig4" class="page">
+    <h2>Fig. 4 | Governance Diversity Atlas & Paradigm Characteristics of Global Cities</h2>
+    <div id="f4a" class="panel" style="margin-bottom:15px;"><div id="c4a" class="chart-box-2"></div></div>
+    <div id="roses" class="grid3"></div>
+  </div>
+
+  <!-- Compare -->
+  <div id="compare" class="page">
+    <h2>City Comparison</h2>
+    <div class="grid2">
+      <div>
+        <div id="checks"></div>
+        <button class="btn" onclick="docmp()">📊 Compare</button>
+      </div>
+      <div id="cmp-res"></div>
+    </div>
+  </div>
+
+  <div class="footer">Nature Cities | Global Governance Toolkit | SDG 11.3</div>
+
+  <script>
+    // ==================== DATA ====================
+    const DATA = {
+      xiongAn:    { name: "Xiong'an",    type: 'Tabula Rasa', p: 'Gov-Led', s: [4.75,4.80,4.20,2.50,2.25,2.00] },
+      singapore:  { name: 'Singapore',   type: 'Global Hub',  p: 'Gov-Led', s: [4.75,4.75,4.50,3.25,3.00,2.75] },
+      theLine:    { name: 'THE LINE',    type: 'Tabula Rasa', p: 'Gov-Led', s: [4.50,3.80,4.60,2.80,2.50,1.80] },
+      barcelona:  { name: 'Barcelona',   type: 'Historic',    p: 'PPP',     s: [3.00,3.20,3.80,4.20,4.50,4.30] },
+      amsterdam:  { name: 'Amsterdam',   type: 'Historic',    p: 'PPP',     s: [2.80,3.50,4.00,4.50,4.60,4.40] },
+      rotterdam:  { name: 'Rotterdam',   type: 'Port City',   p: 'PPP',     s: [3.20,3.40,3.90,4.10,4.20,4.00] },
+      minnStPaul: { name: 'Minn-St Paul',type: 'Twin Cities', p: 'PPP',     s: [2.90,3.10,3.70,4.00,4.10,4.20] },
+      newYork:    { name: 'New York',    type: 'Global Hub',  p: 'Market',  s: [3.50,3.80,4.30,4.60,3.50,3.20] },
+      toronto:    { name: 'Toronto',     type: 'Finance Ctr', p: 'Market',  s: [3.20,3.60,4.10,4.40,3.80,3.50] },
+      seoul:      { name: 'Seoul',       type: 'Global Hub',  p: 'Market',  s: [3.80,4.00,4.40,4.20,3.40,3.10] }
+    };
+    const KEYS = Object.keys(DATA);
+    const INDS = ['Gov. Control','Deployment','Tech Agility','Market Open.','Data Transp.','Public Partic.'];
+    const PCOL = {'Gov-Led':'#e74c3c','PPP':'#3498db','Market':'#2ecc71'};
+    const MEANS = [0,1,2,3,4,5].map(i => KEYS.reduce((s,k) => s+DATA[k].s[i],0)/KEYS.length);
+
+    const RECS = {
+      'Gov-Led': { str:['High admin efficiency','Rapid deployment','Strong regulation','Clear accountability'], risk:['Low participation','Sensor desert risk','Algorithmic authority','Data opacity'], act:['Ethics by Design','Algorithmic audits','Participatory loops','Equitable sensors','Open data','Regulatory sandboxes'] },
+      'PPP': { str:['Balanced governance','High transparency','Strong participation','Equitable distribution'], risk:['Slow deployment','Coordination complexity','Vendor lock-in','Interop issues'], act:['Streamline decisions','Data sovereignty','Interop standards','Cross-boundary gov','Capacity building','Privacy tech'] },
+      'Market': { str:['High tech agility','Market openness','Rapid iteration','Cutting-edge solutions'], risk:['Data commodification','Privacy risks','Algorithmic bias','Weak oversight'], act:['Data protection laws','Algo accountability','Public oversight','Equity assessments','Vendor diversity','Community benefits'] }
+    };
+
+    // ==================== TABS ====================
+function show(id, btn) {
+  // 隐藏所有页面
+  document.querySelectorAll('.page').forEach(e => {
+    e.classList.remove('active');
+  });
+  
+  document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+  
+  const target = document.getElementById(id);
+  target.classList.add('active');
+  btn.classList.add('active');
+
+  setTimeout(() => {
+    initCharts(); 
+    
+    const charts = target.querySelectorAll('.chart-box, .chart-box-2, [id^="rose-"]');
+    charts.forEach(container => {
+      const instance = echarts.getInstanceByDom(container);
+      if (instance) {
+        instance.resize();
+      }
+    });
+  }, 100);
+}
+
+    // ==================== SLIDERS ====================
+    function initSliders() {
+      ['gc','ds','ta','mo','dt','pp'].forEach((id,i) => {
+        const el = document.getElementById(id);
+        el.addEventListener('input', () => document.getElementById(id+'-v').textContent = el.value);
+      });
+    }
+
+    // ==================== PRESET ====================
+    function loadPreset() {
+      const sel = document.getElementById('preset').value;
+      if (!sel) return;
+      const d = DATA[sel];
+      document.getElementById('cname').value = d.name;
+      document.getElementById('ctype').value = d.type;
+      ['gc','ds','ta','mo','dt','pp'].forEach((id,i) => {
+        document.getElementById(id).value = d.s[i];
+        document.getElementById(id+'-v').textContent = d.s[i].toFixed(2);
+      });
+      assess();
+    }
+
+    // ==================== ASSESS ====================
+    function assess() {
+      const name = document.getElementById('cname').value || 'Unknown';
+      const type = document.getElementById('ctype').value;
+      const scores = ['gc','ds','ta','mo','dt','pp'].map(id => parseFloat(document.getElementById(id).value));
+      const admin = (scores[0]+scores[1])/2, social = (scores[4]+scores[5])/2, market = (scores[3]+scores[2])/2;
+      let para;
+      if (admin>4.0 && social<3.5) para='Gov-Led';
+      else if (social>4.0 && market>3.5) para='PPP';
+      else if (market>4.0 && social<3.8) para='Market';
+      else { const g=admin-social,p=(social+market)/2-3,m=market-social; para=(g>p&&g>m)?'Gov-Led':(p>m?'PPP':'Market'); }
+      const sensor = ((5-scores[4])*0.3+(5-scores[5])*0.4+(5-scores[3])*0.3)/5;
+      const power = scores[0]*0.5+(5-scores[5])*0.3+(5-scores[4])*0.2;
+      const maturity = scores.reduce((a,b)=>a+b,0)/6;
+      const level = maturity>=4.0?'Advanced':maturity>=3.0?'Developing':'Emerging';
+      const r = RECS[para], col = PCOL[para];
+      const sRisk = sensor>0.3?'⚠️ High':sensor>0.2?'⚡ Medium':'✅ Low';
+      const sCol = sensor>0.3?'#e74c3c':sensor>0.2?'#f39c12':'#2ecc71';
+      let devHtml = '<table class="tbl"><tr><th>Indicator</th><th>Score</th><th>Mean</th><th>Deviation</th></tr>';
+      scores.forEach((sc,i) => { const dev=sc-MEANS[i]; devHtml+=`<tr><td>${INDS[i]}</td><td><b>${sc.toFixed(2)}</b></td><td>${MEANS[i].toFixed(2)}</td><td style="color:${dev>0?'green':dev<0?'red':'gray'}">${dev>0?'+':''}${dev.toFixed(2)}</td></tr>`; });
+      devHtml += '</table>';
+      document.getElementById('results').innerHTML = `<div class="result"><h3 style="margin:0 0 5px;">${name}</h3><p style="color:#666;margin:0 0 8px;">${type}</p><p><b>Paradigm:</b> <span class="badge" style="background:${col}">${para}</span></p><p><b>Maturity:</b> <span style="font-size:1.6em;font-weight:bold;color:#667eea;">${maturity.toFixed(2)}</span>/5.00 — <em>${level}</em></p><p><b>Power Conc.:</b> ${power.toFixed(2)}/5.00 | <b>Sensor Desert:</b> <span style="color:${sCol};font-weight:bold;">${(sensor*100).toFixed(1)}% ${sRisk}</span></p></div><h3>vs Global Benchmark</h3>${devHtml}<h3>✅ Strengths</h3><ul class="recs">${r.str.map(x=>`<li>✅ ${x}</li>`).join('')}</ul><h3>⚠️ Risks</h3><ul class="recs">${r.risk.map(x=>`<li>⚠️ ${x}</li>`).join('')}</ul><h3>💡 Recommendations</h3><ul class="recs">${r.act.map(x=>`<li>💡 ${x}</li>`).join('')}</ul>`;
+    }
+
+    function resetForm() {
+      document.getElementById('preset').value='';
+      document.getElementById('cname').value='';
+      ['gc','ds','ta','mo','dt','pp'].forEach(id => { document.getElementById(id).value=3.5; document.getElementById(id+'-v').textContent='3.5'; });
+      document.getElementById('results').innerHTML='<div class="result" style="text-align:center;color:#666;">Adjust scores and click Assess</div>';
+    }
+
+    // ==================== COMPARE ====================
+    function initCmp() {
+      document.getElementById('checks').innerHTML = KEYS.map(k => `<label style="display:block;margin:3px 0;"><input type="checkbox" value="${k}" ${['xiongAn','singapore','barcelona','newYork'].includes(k)?'checked':''}> ${DATA[k].name} (${DATA[k].p})</label>`).join('');
+    }
+    function docmp() {
+      const sel = Array.from(document.querySelectorAll('#checks input:checked')).map(c=>c.value);
+      if (sel.length<2) { alert('Select ≥2 cities'); return; }
+      let h = '<h3>Results</h3><table class="tbl"><tr><th>Indicator</th>';
+      sel.forEach(k => h+=`<th>${DATA[k].name}</th>`);
+      h += '<th>Mean</th></tr>';
+      INDS.forEach((label,i) => {
+        h += `<tr><td><b>${label}</b></td>`;
+        sel.forEach(k => { const d=DATA[k].s[i]-MEANS[i]; h+=`<td><span style="color:${d>0?'green':d<0?'red':'gray'};font-weight:bold;">${DATA[k].s[i].toFixed(2)}</span> <small>(${d>0?'+':''}${d.toFixed(2)})</small></td>`; });
+        h += `<td>${MEANS[i].toFixed(2)}</td></tr>`;
+      });
+      h += '</table>';
+      document.getElementById('cmp-res').innerHTML = h;
+    }
+
+    // ==================== CHARTS ====================
+    let chartsDone = false;
+    function initCharts() {
+      if (chartsDone) return;
+      if (!echarts) { console.error('ECharts not loaded'); return; }
+      
+      // ============= FIG 2 =============
+      // Fig 2a - 3D Power-Actors-Process
+      try {
+        echarts.init(document.getElementById('f2a')).setOption({
+          title: { text: '(a) Power–Actors–Process 3D Framework', left: 'center', top: 5, textStyle: { fontSize: 12, fontWeight: 'bold' } },
+          legend: { data: ['Gov-Led','PPP','Market'], bottom: 5 },
+          grid3D: { boxWidth:100, boxDepth:100, boxHeight:60, viewControl:{alpha:20,beta:40,distance:120}, label:{textStyle:{fontSize:10}} },
+          xAxis3D: { name:'Power', min:1, max:5, nameTextStyle:{fontSize:10} },
+          yAxis3D: { name:'Actors', min:1, max:5, nameTextStyle:{fontSize:10} },
+          zAxis3D: { name:'Process', min:1, max:5, nameTextStyle:{fontSize:10} },
+          series: [{ type:'scatter3D', data:KEYS.map(k=>({value:[DATA[k].s[0],DATA[k].s[5],DATA[k].s[4]],name:DATA[k].name,itemStyle:{color:PCOL[DATA[k].p]}})), symbolSize:12, label:{show:true,formatter:'{b}',position:'top',textStyle:{fontSize:9,color:'#333'}} }]
+        });
+      } catch(e) { console.error('2a:',e); }
+
+      // Fig 2b - Line chart: power asymmetry (Singapore vs Amsterdam)
+      try {
+        echarts.init(document.getElementById('f2b')).setOption({
+          title: { text: '(b) Power Asymmetry: Singapore vs Amsterdam', left: 'center', top: 5, textStyle: { fontSize: 12, fontWeight: 'bold' } },
+          tooltip: { trigger:'axis' },
+          legend: { data: ['Singapore (Gov-Led)','Amsterdam (PPP)'], bottom: 5 },
+          grid: { left:60, right:30, top:50, bottom:50 },
+          xAxis: { type:'category', data:INDS, axisLabel:{rotate:30,fontSize:9,fontWeight:'bold'} },
+          yAxis: { type:'value', min:1, max:5, name:'Score', nameTextStyle:{fontSize:10} },
+          series: [
+            {name:'Singapore (Gov-Led)',type:'line',data:DATA.singapore.s,smooth:false,symbolSize:8,itemStyle:{color:'#e74c3c'},lineStyle:{width:3},label:{show:true,position:'top',fontSize:8}},
+            {name:'Amsterdam (PPP)',type:'line',data:DATA.amsterdam.s,smooth:false,symbolSize:8,itemStyle:{color:'#3498db'},lineStyle:{width:3},label:{show:true,position:'bottom',fontSize:8}}
+          ]
+        });
+      } catch(e) { console.error('2b:',e); }
+
+      // Fig 2c - Line chart: power dynamics across governance stages
+      try {
+        echarts.init(document.getElementById('f2c')).setOption({
+          title: { text: '(c) Power Dynamics Across Governance Stages', left: 'center', top: 5, textStyle: { fontSize: 12, fontWeight: 'bold' } },
+          tooltip: { trigger:'axis' },
+          legend: { data: ['Singapore','Amsterdam','New York'], bottom: 5 },
+          grid: { left:60, right:30, top:50, bottom:50 },
+          xAxis: { type:'category', data:['Data Access','Aggregation','Algorithm Analysis','Decision Execution','Audit & Oversight'], axisLabel:{rotate:25,fontSize:8} },
+          yAxis: { type:'value', min:1, max:5, name:'Power Density', nameTextStyle:{fontSize:10} },
+          series: [
+            {name:'Singapore',type:'line',data:[4.5,4.3,4.0,4.2,2.5],smooth:false,symbolSize:7,itemStyle:{color:'#e74c3c'},lineStyle:{width:2.5}},
+            {name:'Amsterdam',type:'line',data:[3.0,2.8,2.5,2.8,4.4],smooth:false,symbolSize:7,itemStyle:{color:'#3498db'},lineStyle:{width:2.5}},
+            {name:'New York',type:'line',data:[3.5,3.8,3.6,3.4,3.2],smooth:false,symbolSize:7,itemStyle:{color:'#2ecc71'},lineStyle:{width:2.5}}
+          ]
+        });
+      } catch(e) { console.error('2c:',e); }
+
+      // Fig 2d - Bubble matrix: power concentration across governance stages
+      try {
+        const bCities = ['Singapore','Amsterdam','New York','Barcelona','Toronto'];
+        const bStages = ['Perception','Integration','Analysis','Execution','Oversight'];
+        const powerMatrix = [
+          [4.5, 4.2, 3.8, 4.0, 2.5],  // Singapore (high power in early stages, drops at oversight)
+          [3.0, 2.8, 2.5, 2.8, 4.4],  // Amsterdam (power increases towards oversight/participation)
+          [3.5, 3.8, 3.6, 3.4, 3.2],  // New York (relatively balanced)
+          [3.2, 3.0, 2.8, 3.0, 4.2],  // Barcelona (strong oversight/participation)
+          [3.2, 3.6, 4.1, 3.8, 3.5]   // Toronto (balanced with tech focus)
+        ];
+        const bData = [];
+        for(let i=0;i<bCities.length;i++) {
+          for(let j=0;j<bStages.length;j++) {
+            bData.push({value:[j,i,powerMatrix[i][j]],name:bCities[i]});
+          }
+        }
+        echarts.init(document.getElementById('f2d')).setOption({
+          title: { text: '(d) Power Concentration Bubble Matrix', left: 'center', top: 5, textStyle: { fontSize: 12, fontWeight: 'bold' } },
+          tooltip: { 
+            // 这里的 p.value 也是坐标数组
+            formatter: p => `${p.data.name}<br/>${bStages[p.value[0]]}: ${p.value[2].toFixed(1)}` 
+          },
+          grid: { left: 100, right: 50, top: 50, bottom: 70 },
+          xAxis: { type: 'category', data: bStages, axisLabel: { rotate: 30, fontSize: 8 }, position: 'bottom' },
+          yAxis: { type: 'category', data: bCities, axisLabel: { fontSize: 9 } },
+          visualMap: { min: 2, max: 5, calculable: true, orient: 'horizontal', left: 'center', bottom: 5, inRange: { color: ['#f5f5f5', '#5dade2', '#2e4053'] }, text: ['High', 'Low'], textStyle: { fontSize: 9 } },
+          series: [{ 
+            type: 'scatter', 
+            data: bData, 
+            // 【修复位置】：此时 val 直接就是 [j, i, power] 数组
+            symbolSize: val => val[2] * 12, 
+            itemStyle: { opacity: 0.85 }, 
+            label: { 
+              show: true, 
+              // 【修复位置】：这里 p.value 也是坐标数组
+              formatter: p => p.value[2].toFixed(1), 
+              fontSize: 9, 
+              fontWeight: 'bold', 
+              color: '#fff' 
+            } 
+          }]
+        });
+      } catch(e) { console.error('2d:',e); }
+
+      // Fig 2e - Heatmap: spatial inequality & sensor desert in ethnic minority communities
+      try {
+        const communities = ['High-Income Neighborhoods','Middle-Class Areas','Working-Class Districts','Ethnic Minority Communities','Marginalized Communities'];
+        const indicators2e = ['Sensor Density','Data Coverage','Service Accessibility','Digital Mapping','Participation'];
+        const heatData = [
+          [4.5,4.3,4.0,4.2,3.8],  // High-Income
+          [4.0,3.8,3.5,3.7,3.3],  // Middle-Class
+          [3.2,3.0,2.8,3.0,2.7],  // Working-Class
+          [2.5,2.3,2.0,2.2,2.0],  // Ethnic Minority (sensor desert!)
+          [1.8,1.5,1.3,1.5,1.2]   // Marginalized (severe sensor desert)
+        ];
+        const hData = [];
+        for(let i=0;i<5;i++) for(let j=0;j<5;j++) hData.push([j,i,heatData[i][j]]);
+        echarts.init(document.getElementById('f2e')).setOption({
+          title: { text: '(e) Spatial Inequality: Sensor Desert in Ethnic Minority Communities', left: 'center', top: 5, textStyle: { fontSize: 12, fontWeight: 'bold' } },
+          tooltip: { formatter: p => `${communities[p.value[1]]}<br/>${indicators2e[p.value[0]]}: ${p.value[2].toFixed(1)}` },
+          grid: { left:160, right:50, top:50, bottom:80 },
+          xAxis: { type:'category', data:indicators2e, axisLabel:{rotate:30,fontSize:8}, position:'bottom' },
+          yAxis: { type:'category', data:communities, axisLabel:{fontSize:8} },
+          visualMap: { min:1, max:5, calculable:true, orient:'horizontal', left:'center', bottom:5, inRange:{color:['#e74c3c','#f39c12','#f1c40f','#2ecc71','#3498db']}, textStyle:{fontSize:9} },
+          series: [{ type:'heatmap', data:hData, label:{show:true,fontSize:9,fontWeight:'bold',color:'#fff'} }]
+        });
+      } catch(e) { console.error('2e:',e); }
+
+      // Fig 2f - Radar chart: Current Tech-Driven vs Ideal Governance-Driven
+      try {
+        echarts.init(document.getElementById('f2f')).setOption({
+          title: { text: '(f) Governance Maturity Radar: Current Tech-Driven vs. Ideal Governance-Driven', left: 'center', top: 5, textStyle: { fontSize: 12, fontWeight: 'bold' } },
+          tooltip: {},
+          legend: { data: ['Current (Tech-Driven)','Ideal (Governance-Driven)'], bottom: 5 },
+          radar: { 
+            indicator:[
+              {name:'Gov. Control',max:5},
+              {name:'Deploy. Speed',max:5},
+              {name:'Tech Agility',max:5},
+              {name:'Market Open.',max:5},
+              {name:'Data Transp.',max:5},
+              {name:'Public Partic.',max:5},
+              {name:'Infra. Equity',max:5}
+            ], 
+            radius:'65%',
+            axisName:{fontSize:8}
+          },
+          series: [{ 
+            type:'radar', 
+            data:[
+              {
+                value:[3.65,3.80,4.05,3.76,3.43,3.33,2.80],
+                name:'Current (Tech-Driven)',
+                areaStyle:{color:'rgba(231,76,60,0.25)'},
+                lineStyle:{color:'#e74c3c',width:2.5},
+                itemStyle:{color:'#e74c3c'}
+              },
+              {
+                value:[3.50,4.00,4.20,4.20,4.30,4.20,4.50],
+                name:'Ideal (Governance-Driven)',
+                areaStyle:{color:'rgba(52,152,219,0.25)'},
+                lineStyle:{color:'#3498db',width:2.5},
+                itemStyle:{color:'#3498db'}
+              }
+            ]
+          }]
+        });
+      } catch(e) { console.error('2f:',e); }
+
+      // Fig 2g - Force-directed network: stakeholder topology comparison
+      try {
+        echarts.init(document.getElementById('f2g')).setOption({
+          title: { text: '(g) Stakeholder Network Topology: Tech-Driven vs. Governance-Driven', left: 'center', top: 5, textStyle: { fontSize: 12, fontWeight: 'bold' } },
+          tooltip: {},
+          legend: { data: ['Tech-Driven','Governance-Driven'], bottom: 5 },
+          series: [
+            {
+              name:'Tech-Driven',
+              type:'graph', layout:'force',
+              data:[
+                {name:'Tech Vendors',symbolSize:65,itemStyle:{color:'#e74c3c'},label:{fontSize:9,fontWeight:'bold'}},
+                {name:'Government',symbolSize:45,itemStyle:{color:'#3498db'}},
+                {name:'Private Sector',symbolSize:35,itemStyle:{color:'#2ecc71'}},
+                {name:'Academia',symbolSize:25,itemStyle:{color:'#f39c12'}},
+                {name:'Public',symbolSize:18,itemStyle:{color:'#95a5a6'}}
+              ],
+              links:[
+                {source:'Tech Vendors',target:'Government',lineStyle:{width:5}},
+                {source:'Tech Vendors',target:'Private Sector',lineStyle:{width:4}},
+                {source:'Tech Vendors',target:'Academia',lineStyle:{width:3}},
+                {source:'Government',target:'Public',lineStyle:{width:2}}
+              ],
+              force:{repulsion:200,edgeLength:[80,150],gravity:0.1},
+              label:{show:true,fontSize:9,color:'#333'},
+              lineStyle:{curveness:0.2,color:'source'},
+              roam:true,
+              left:'0%',width:'50%',top: '15%',bottom: '15%'
+            },
+            {
+              name:'Governance-Driven',
+              type:'graph', layout:'force',
+              data:[
+                {name:'Government',symbolSize:50,itemStyle:{color:'#3498db'},label:{fontSize:9,fontWeight:'bold'}},
+                {name:'Public',symbolSize:50,itemStyle:{color:'#95a5a6'},label:{fontSize:9,fontWeight:'bold'}},
+                {name:'NGOs',symbolSize:40,itemStyle:{color:'#e67e22'}},
+                {name:'Academia',symbolSize:35,itemStyle:{color:'#f39c12'}},
+                {name:'Private Sector',symbolSize:30,itemStyle:{color:'#2ecc71'}}
+              ],
+              links:[
+                {source:'Government',target:'Public',lineStyle:{width:5}},
+                {source:'NGOs',target:'Public',lineStyle:{width:5}},
+                {source:'Government',target:'NGOs',lineStyle:{width:4}},
+                {source:'Academia',target:'Government',lineStyle:{width:4}},
+                {source:'Private Sector',target:'Public',lineStyle:{width:3}},
+                {source:'Academia',target:'NGOs',lineStyle:{width:3}},
+                {source:'Private Sector',target:'Academia',lineStyle:{width:2}}
+              ],
+              force:{repulsion:200,edgeLength:[80,150],gravity:0.1},
+              label:{show:true,fontSize:9,color:'#333'},
+              lineStyle:{curveness:0.2,color:'source'},
+              roam:true,
+              left:'50%',width:'50%',top: '15%',bottom: '15%'
+            }
+          ]
+        });
+      } catch(e) { console.error('2g:',e); }
+
+      // ============= FIG 4 =============
+      // Fig 4a - Deviation bars
+      try {
+        const dev={};
+        ['Gov-Led','PPP','Market'].forEach(par => {
+          dev[par]={};
+          const pk = par==='Gov-Led'?['xiongAn','singapore','theLine']:par==='PPP'?['barcelona','amsterdam','rotterdam','minnStPaul']:['newYork','toronto','seoul'];
+          INDS.forEach((_,i) => { dev[par][i]=pk.reduce((s,k)=>s+(DATA[k].s[i]-MEANS[i]),0)/pk.length; });
+        });
+        echarts.init(document.getElementById('c4a')).setOption({
+          title: { text: '(a) Governance Paradigm Fingerprints: Administrative Efficiency vs. Social Inclusion', left: 'center', top: 5, textStyle: { fontSize: 12, fontWeight: 'bold' } },
+          tooltip: { trigger:'axis', formatter: p => { let r=p[0].name+'<br/>'; p.forEach(i=>{r+=`${i.seriesName}: ${i.value>0?'+':''}${i.value.toFixed(2)}<br/>`;}); return r; } },
+          legend: { data: ['Gov-Led','PPP','Market'], bottom: 5 },
+          grid: { left:90, right:40, top:50, bottom:50 },
+          xAxis: { type:'value', name:'Deviation (vs. Global Mean)', nameTextStyle:{fontSize:10}, splitLine:{lineStyle:{type:'dashed'}} },
+          yAxis: { type:'category', data:INDS, axisLabel:{fontSize:9,fontWeight:'bold'} },
+          series: [
+            {name:'Gov-Led',type:'bar',data:[0,1,2,3,4,5].map(i=>dev['Gov-Led'][i]),itemStyle:{color:'#e74c3c'},label:{show:true,position:'right',formatter:p=>(p.value>0?'+':'')+p.value.toFixed(2),fontSize:8}},
+            {name:'PPP',type:'bar',data:[0,1,2,3,4,5].map(i=>dev['PPP'][i]),itemStyle:{color:'#3498db'},label:{show:true,position:'right',formatter:p=>(p.value>0?'+':'')+p.value.toFixed(2),fontSize:8}},
+            {name:'Market',type:'bar',data:[0,1,2,3,4,5].map(i=>dev['Market'][i]),itemStyle:{color:'#2ecc71'},label:{show:true,position:'right',formatter:p=>(p.value>0?'+':'')+p.value.toFixed(2),fontSize:8}}
+          ]
+        });
+      } catch(e) { console.error('4a:',e); }
+
+      // Fig 4b-k - Nightingale roses
+      try {
+        const rd = document.getElementById('roses');
+        rd.innerHTML = '';
+        KEYS.forEach((k,idx) => {
+          const d = DATA[k];
+          const div = document.createElement('div');
+          div.innerHTML = `<div id="rose-${idx}" style="width:100%;height:240px;"></div>`;
+          rd.appendChild(div);
+          const ch = echarts.init(document.getElementById('rose-'+idx));
+          const col = PCOL[d.p];
+          const letter = String.fromCharCode(98+idx);
+          ch.setOption({
+            title: { text:`(${letter.toUpperCase()}) ${d.name}`, subtext:`${d.type} | ${d.p}`, left:'center', top:5, textStyle:{fontSize:10,fontWeight:'bold',color:col}, subtextStyle:{fontSize:8} },
+            tooltip: { trigger:'item', formatter:'{b}: {c}' },
+            polar: { radius:['15%','75%'], center:['50%','55%'] },
+            angleAxis: { type:'category', data:INDS, startAngle:75, axisLabel:{fontSize:7,rotate:25,fontWeight:'bold'} },
+            radiusAxis: { min:0, max:5, axisLabel:{fontSize:8} },
+            series: [{ type:'bar', data:d.s.map(v=>({value:v,itemStyle:{color:col}})), coordinateSystem:'polar', label:{show:true,position:'top',formatter:'{c}',fontSize:8,fontWeight:'bold'}, barMaxWidth:25 }]
+          });
+        });
+      } catch(e) { console.error('Roses:',e); }
+
+      chartsDone = true;
+      console.log('✓ All charts initialized');
+    }
+
+    // ==================== INIT ====================
+    window.addEventListener('load', () => {
+      console.log('Page loaded, ECharts:', typeof echarts !== 'undefined' ? '✓' : '✗');
+      initSliders();
+      initCmp();
+    });
+  </script>
+</body>
+</html>
